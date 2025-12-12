@@ -569,7 +569,26 @@
 
             try {
                 const response = await fetch('/books');
-                allBooks = await response.json();
+                const data = await response.json();
+                
+                // Handle both v1 and v2 API formats
+                if (data.books && Array.isArray(data.books)) {
+                    // v2 format: {"total": 3, "books": [{book_id, title, author, ...}]}
+                    allBooks = {};
+                    data.books.forEach(book => {
+                        allBooks[book.book_id] = {
+                            title: book.title,
+                            author: book.author,
+                            image: book.image,
+                            isbn: book.isbn,
+                            publisher: book.publisher
+                        };
+                    });
+                } else {
+                    // v1 format: {"B001": {title, author, ...}}
+                    allBooks = data;
+                }
+                
                 filteredBooks = Object.entries(allBooks);
                 
                 const bookCount = Object.keys(allBooks).length;
@@ -593,9 +612,12 @@
             } else {
                 searchTerm = searchTerm.toLowerCase();
                 filteredBooks = Object.entries(allBooks).filter(([bookId, info]) => {
+                    // Safety check: ensure info is not null/undefined
+                    if (!info) return false;
+                    
                     return (
-                        info.title.toLowerCase().includes(searchTerm) ||
-                        info.author.toLowerCase().includes(searchTerm) ||
+                        (info.title && info.title.toLowerCase().includes(searchTerm)) ||
+                        (info.author && info.author.toLowerCase().includes(searchTerm)) ||
                         (info.isbn && info.isbn.toLowerCase().includes(searchTerm)) ||
                         bookId.toLowerCase().includes(searchTerm)
                     );
@@ -637,20 +659,23 @@
             if (viewMode === 'grid') {
                 html = '<div class="books-grid">';
                 for (const [bookId, info] of booksToShow) {
+                    // Safety check
+                    if (!info) continue;
+                    
                     const isbn = info.isbn ? `ISBN: ${info.isbn}` : `ID: ${bookId}`;
-                    const coverUrl = `/${info.image}`;
+                    const coverUrl = `/${info.image || 'covers/placeholder.jpg'}`;
                     
                     html += `
                         <div class="book-card" data-book-id="${bookId}">
                             <div class="book-cover">
-                                <img src="${coverUrl}" alt="${info.title}" onerror="this.parentElement.innerHTML='📚'">
+                                <img src="${coverUrl}" alt="${info.title || 'Unknown'}" onerror="this.parentElement.innerHTML='📚'">
                             </div>
                             <div class="book-info">
-                                <div class="book-title">${escapeHtml(info.title)}</div>
-                                <div class="book-author">${escapeHtml(info.author)}</div>
+                                <div class="book-title">${escapeHtml(info.title || 'Unknown Title')}</div>
+                                <div class="book-author">${escapeHtml(info.author || 'Unknown Author')}</div>
                                 <div class="book-meta">${isbn}</div>
                                 <div class="book-actions">
-                                    <button class="btn btn-delete" onclick="deleteBook('${bookId}', '${escapeHtml(info.title)}')">
+                                    <button class="btn btn-delete" onclick="deleteBook('${bookId}', '${escapeHtml(info.title || bookId)}')">
                                         🗑️ Delete
                                     </button>
                                 </div>
@@ -662,15 +687,18 @@
             } else {
                 // List view
                 for (const [bookId, info] of booksToShow) {
+                    // Safety check
+                    if (!info) continue;
+                    
                     const isbn = info.isbn ? `<span style="color: #888;">ISBN: ${info.isbn}</span> • ` : '';
                     const publisher = info.publisher ? `${info.publisher} • ` : '';
                     
                     html += `
                         <div style="background: #f8f9ff; padding: 16px; margin-bottom: 12px; border-radius: 8px; border-left: 4px solid #667eea; display: flex; justify-content: space-between; align-items: center;" data-book-id="${bookId}">
                             <div style="flex: 1;">
-                                <div style="font-weight: 600; color: #333; font-size: 1.1em;">${escapeHtml(info.title)}</div>
+                                <div style="font-weight: 600; color: #333; font-size: 1.1em;">${escapeHtml(info.title || 'Unknown Title')}</div>
                                 <div style="color: #666; font-size: 0.9em; margin-top: 4px;">
-                                    ${escapeHtml(info.author)} • ${isbn}${publisher}ID: ${bookId}
+                                    ${escapeHtml(info.author || 'Unknown Author')} • ${isbn}${publisher}ID: ${bookId}
                                 </div>
                             </div>
                             <div style="display: flex; gap: 10px;">
