@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Cover OCR - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .nav {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav h1 {
+            color: #333;
+            font-size: 1.5em;
+        }
+        .nav a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .nav a:hover {
+            text-decoration: underline;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .required {
+            color: #f44;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .file-input-label {
+            display: block;
+            padding: 12px;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f9ff;
+            transition: all 0.3s;
+        }
+        .file-input-label:hover {
+            background: #eef1ff;
+            border-color: #764ba2;
+        }
+        .file-preview {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .file-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-delete {
+            background: linear-gradient(135deg, #f44 0%, #c33 100%);
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .books-list {
+            margin-top: 30px;
+        }
+        .book-item {
+            background: #f8f9ff;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .book-info {
+            flex: 1;
+        }
+        .book-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+        .book-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 4px;
+        }
+        .book-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+            padding: 20px;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .helper-text {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <h1>📚 Admin Panel - Manage Books</h1>
+            <div>
+                <a href="/">← Back to Recognition</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>➕ Add New Book</h2>
+            
+            <div id="message"></div>
+
+            <form id="addBookForm">
+                <div class="form-group full-width">
+                    <label>Book Cover Image <span class="required">*</span></label>
+                    <div class="file-input-wrapper">
+                        <div class="file-input-label" id="fileLabel">
+                            📤 Click to select cover image
+                        </div>
+                        <input type="file" id="coverImage" accept="image/*" required>
+                    </div>
+                    <div id="filePreview" class="file-preview"></div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="title">Title <span class="required">*</span></label>
+                        <input type="text" id="title" placeholder="e.g., The Great Gatsby" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="author">Author <span class="required">*</span></label>
+                        <input type="text" id="author" placeholder="e.g., F. Scott Fitzgerald" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="isbn">ISBN</label>
+                        <input type="text" id="isbn" placeholder="e.g., 9780743273565">
+                        <div class="helper-text">Used as Book ID if provided</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="publisher">Publisher</label>
+                        <input type="text" id="publisher" placeholder="e.g., Scribner">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">
+                    Add Book to Library
+                </button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>📖 Book Library</h2>
+            
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalBooks">-</div>
+                    <div class="stat-label">Total Books</div>
+                </div>
+            </div>
+
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading books...</p>
+            </div>
+
+            <div id="booksList" class="books-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const coverImageInput = document.getElementById('coverImage');
+        const fileLabel = document.getElementById('fileLabel');
+        const filePreview = document.getElementById('filePreview');
+        const addBookForm = document.getElementById('addBookForm');
+        const message = document.getElementById('message');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // File preview
+        coverImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileLabel.textContent = `✓ ${file.name}`;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    filePreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Submit form
+        addBookForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Adding book...';
+            message.innerHTML = '';
+
+            const formData = new FormData();
+            formData.append('file', coverImageInput.files[0]);
+            formData.append('title', document.getElementById('title').value);
+            formData.append('author', document.getElementById('author').value);
+            
+            const isbn = document.getElementById('isbn').value;
+            const publisher = document.getElementById('publisher').value;
+            
+            if (isbn) formData.append('isbn', isbn);
+            if (publisher) formData.append('publisher', publisher);
+
+            try {
+                const response = await fetch('/admin/add_book', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    message.innerHTML = `
+                        <div class="success">
+                            ✅ ${data.message}<br>
+                            Book ID: <strong>${data.book_id}</strong><br>
+                            Total books in library: <strong>${data.total_books}</strong>
+                        </div>
+                    `;
+                    
+                    // Reset form
+                    addBookForm.reset();
+                    fileLabel.textContent = '📤 Click to select cover image';
+                    filePreview.innerHTML = '';
+                    
+                    // Reload book list
+                    loadBooks();
+                } else {
+                    message.innerHTML = `<div class="error">❌ Error: ${data.detail}</div>`;
+                }
+            } catch (error) {
+                message.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Add Book to Library';
+            }
+        });
+
+        // Load books
+        async function loadBooks() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('booksList').innerHTML = '';
+
+            try {
+                const response = await fetch('/books');
+                const books = await response.json();
+
+                const bookCount = Object.keys(books).length;
+                document.getElementById('totalBooks').textContent = bookCount;
+
+                if (bookCount === 0) {
+                    document.getElementById('booksList').innerHTML = `
+                        <p style="text-align: center; color: #666; padding: 40px;">
+                            No books in library yet. Add your first book above! 📚
+                        </p>
+                    `;
+                } else {
+                    let html = '';
+                    for (const [bookId, info] of Object.entries(books)) {
+                        const isbn = info.isbn ? `<span style="color: #888;">ISBN: ${info.isbn}</span> • ` : '';
+                        const publisher = info.publisher ? `${info.publisher} • ` : '';
+                        
+                        html += `
+                            <div class="book-item" data-book-id="${bookId}">
+                                <div class="book-info">
+                                    <div class="book-title">${info.title}</div>
+                                    <div class="book-meta">
+                                        ${info.author} • ${isbn}${publisher}ID: ${bookId}
+                                    </div>
+                                </div>
+                                <div class="book-actions">
+                                    <button class="btn btn-delete" onclick="deleteBook('${bookId}', '${info.title}')">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    document.getElementById('booksList').innerHTML = html;
+                }
+            } catch (error) {
+                document.getElementById('booksList').innerHTML = `
+                    <div class="error">Error loading books: ${error.message}</div>
+                `;
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Delete book
+        async function deleteBook(bookId, title) {
+            if (!confirm(`Are you sure you want to delete "${title}"?\n\nThis will:\n- Remove the book from library\n- Delete the cover image\n- Regenerate embeddings\n\nThis cannot be undone!`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/delete_book/${bookId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    message.innerHTML = `
+                        <div class="success">
+                            ✅ ${data.message}<br>
+                            Total books: <strong>${data.total_books}</strong>
+                        </div>
+                    `;
+                    loadBooks();
+                } else {
+                    message.innerHTML = `<div class="error">❌ Error: ${data.detail}</div>`;
+                }
+            } catch (error) {
+                message.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Load books on page load
+        loadBooks();
+    </script>
+</body>
+</html>
+
