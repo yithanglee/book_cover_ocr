@@ -14,6 +14,10 @@ from utils.embedding_v2 import (
     assess_image_quality,
     compute_similarity
 )
+from utils.visualization import (
+    create_processing_pipeline,
+    get_quality_metrics
+)
 from utils.database import (
     BookDatabase, 
     initialize_database, 
@@ -271,6 +275,12 @@ async def admin():
     return FileResponse("static/admin.html")
 
 
+@app.get("/visualize")
+async def visualize():
+    """Serve the visualization interface"""
+    return FileResponse("static/index_visualize.html")
+
+
 @app.get("/health")
 async def health():
     """Enhanced health check with model and database status"""
@@ -342,6 +352,49 @@ async def recognize_base64(data: dict):
     except Exception as e:
         logger.error(f"Recognition error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/recognize_visualize")
+async def recognize_visualize(file: UploadFile):
+    """
+    Recognize a book and return visualization of processing steps
+    Shows how the image is analyzed, preprocessed, and features extracted
+    """
+    try:
+        # Read and decode image
+        data = await file.read()
+        
+        if len(data) > 20 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File too large (max 20MB)")
+        
+        img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+        
+        if img is None:
+            raise HTTPException(status_code=400, detail="Invalid image file")
+        
+        # Get quality metrics
+        quality_info = get_quality_metrics(img)
+        
+        # Create visualization pipeline
+        processing_steps = create_processing_pipeline(img, quality_info)
+        
+        # Perform recognition
+        recognition_result = await recognize_image(img)
+        
+        # Return combined result
+        return {
+            "recognition": recognition_result,
+            "visualization": {
+                "steps": processing_steps,
+                "quality_metrics": quality_info
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Visualization error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Visualization failed: {str(e)}")
 
 
 @app.get("/books")
