@@ -175,32 +175,161 @@
         .books-list {
             margin-top: 30px;
         }
-        .book-item {
-            background: #f8f9ff;
-            padding: 16px;
-            margin-bottom: 12px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 1200px) {
+            .books-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .books-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 480px) {
+            .books-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .book-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .book-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+        .book-cover {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 3em;
+        }
+        .book-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .book-info {
-            flex: 1;
+            padding: 16px;
         }
         .book-title {
             font-weight: 600;
             color: #333;
-            font-size: 1.1em;
+            font-size: 1em;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
         }
-        .book-meta {
+        .book-author {
             color: #666;
             font-size: 0.9em;
-            margin-top: 4px;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .book-meta {
+            color: #888;
+            font-size: 0.8em;
+            margin-bottom: 12px;
         }
         .book-actions {
             display: flex;
+            gap: 8px;
+        }
+        .book-actions .btn-delete {
+            width: 100%;
+            font-size: 0.85em;
+            padding: 8px 12px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .pagination button {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+        .pagination button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+        }
+        .pagination-info {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .search-filter {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+        }
+        .view-toggle button {
+            padding: 10px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .view-toggle button.active {
+            background: #667eea;
+            color: white;
         }
         .loading {
             text-align: center;
@@ -312,6 +441,31 @@
                     <div class="stat-value" id="totalBooks">-</div>
                     <div class="stat-label">Total Books</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="currentPage">-</div>
+                    <div class="stat-label">Current Page</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPages">-</div>
+                    <div class="stat-label">Total Pages</div>
+                </div>
+            </div>
+
+            <div class="search-filter">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="search-input" 
+                    placeholder="🔍 Search by title, author, or ISBN..."
+                >
+                <div class="view-toggle">
+                    <button id="gridViewBtn" class="active" onclick="setViewMode('grid')">
+                        📱 Grid
+                    </button>
+                    <button id="listViewBtn" onclick="setViewMode('list')">
+                        📋 List
+                    </button>
+                </div>
             </div>
 
             <div id="loading" class="loading" style="display: none;">
@@ -320,6 +474,8 @@
             </div>
 
             <div id="booksList" class="books-list"></div>
+            
+            <div id="pagination" class="pagination"></div>
         </div>
     </div>
 
@@ -399,6 +555,13 @@
             }
         });
 
+        // Pagination and view state
+        let allBooks = {};
+        let filteredBooks = [];
+        let currentPage = 1;
+        let booksPerPage = 16; // 4x4 grid
+        let viewMode = 'grid'; // 'grid' or 'list'
+
         // Load books
         async function loadBooks() {
             document.getElementById('loading').style.display = 'block';
@@ -406,41 +569,14 @@
 
             try {
                 const response = await fetch('/books');
-                const books = await response.json();
-
-                const bookCount = Object.keys(books).length;
+                allBooks = await response.json();
+                filteredBooks = Object.entries(allBooks);
+                
+                const bookCount = Object.keys(allBooks).length;
                 document.getElementById('totalBooks').textContent = bookCount;
-
-                if (bookCount === 0) {
-                    document.getElementById('booksList').innerHTML = `
-                        <p style="text-align: center; color: #666; padding: 40px;">
-                            No books in library yet. Add your first book above! 📚
-                        </p>
-                    `;
-                } else {
-                    let html = '';
-                    for (const [bookId, info] of Object.entries(books)) {
-                        const isbn = info.isbn ? `<span style="color: #888;">ISBN: ${info.isbn}</span> • ` : '';
-                        const publisher = info.publisher ? `${info.publisher} • ` : '';
-                        
-                        html += `
-                            <div class="book-item" data-book-id="${bookId}">
-                                <div class="book-info">
-                                    <div class="book-title">${info.title}</div>
-                                    <div class="book-meta">
-                                        ${info.author} • ${isbn}${publisher}ID: ${bookId}
-                                    </div>
-                                </div>
-                                <div class="book-actions">
-                                    <button class="btn btn-delete" onclick="deleteBook('${bookId}', '${info.title}')">
-                                        🗑️ Delete
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    }
-                    document.getElementById('booksList').innerHTML = html;
-                }
+                
+                currentPage = 1;
+                renderBooks();
             } catch (error) {
                 document.getElementById('booksList').innerHTML = `
                     <div class="error">Error loading books: ${error.message}</div>
@@ -449,6 +585,202 @@
                 document.getElementById('loading').style.display = 'none';
             }
         }
+
+        // Filter books based on search
+        function filterBooks(searchTerm) {
+            if (!searchTerm) {
+                filteredBooks = Object.entries(allBooks);
+            } else {
+                searchTerm = searchTerm.toLowerCase();
+                filteredBooks = Object.entries(allBooks).filter(([bookId, info]) => {
+                    return (
+                        info.title.toLowerCase().includes(searchTerm) ||
+                        info.author.toLowerCase().includes(searchTerm) ||
+                        (info.isbn && info.isbn.toLowerCase().includes(searchTerm)) ||
+                        bookId.toLowerCase().includes(searchTerm)
+                    );
+                });
+            }
+            currentPage = 1;
+            renderBooks();
+        }
+
+        // Render books with pagination
+        function renderBooks() {
+            const bookCount = filteredBooks.length;
+            
+            if (bookCount === 0) {
+                document.getElementById('booksList').innerHTML = `
+                    <p style="text-align: center; color: #666; padding: 40px;">
+                        ${Object.keys(allBooks).length === 0 
+                            ? 'No books in library yet. Add your first book above! 📚' 
+                            : 'No books match your search. Try different keywords.'}
+                    </p>
+                `;
+                document.getElementById('pagination').innerHTML = '';
+                document.getElementById('currentPage').textContent = '-';
+                document.getElementById('totalPages').textContent = '-';
+                return;
+            }
+
+            const totalPages = Math.ceil(bookCount / booksPerPage);
+            const startIdx = (currentPage - 1) * booksPerPage;
+            const endIdx = Math.min(startIdx + booksPerPage, bookCount);
+            const booksToShow = filteredBooks.slice(startIdx, endIdx);
+
+            // Update stats
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('totalPages').textContent = totalPages;
+
+            // Render books in grid or list view
+            let html = '';
+            if (viewMode === 'grid') {
+                html = '<div class="books-grid">';
+                for (const [bookId, info] of booksToShow) {
+                    const isbn = info.isbn ? `ISBN: ${info.isbn}` : `ID: ${bookId}`;
+                    const coverUrl = `/${info.image}`;
+                    
+                    html += `
+                        <div class="book-card" data-book-id="${bookId}">
+                            <div class="book-cover">
+                                <img src="${coverUrl}" alt="${info.title}" onerror="this.parentElement.innerHTML='📚'">
+                            </div>
+                            <div class="book-info">
+                                <div class="book-title">${escapeHtml(info.title)}</div>
+                                <div class="book-author">${escapeHtml(info.author)}</div>
+                                <div class="book-meta">${isbn}</div>
+                                <div class="book-actions">
+                                    <button class="btn btn-delete" onclick="deleteBook('${bookId}', '${escapeHtml(info.title)}')">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+            } else {
+                // List view
+                for (const [bookId, info] of booksToShow) {
+                    const isbn = info.isbn ? `<span style="color: #888;">ISBN: ${info.isbn}</span> • ` : '';
+                    const publisher = info.publisher ? `${info.publisher} • ` : '';
+                    
+                    html += `
+                        <div style="background: #f8f9ff; padding: 16px; margin-bottom: 12px; border-radius: 8px; border-left: 4px solid #667eea; display: flex; justify-content: space-between; align-items: center;" data-book-id="${bookId}">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: #333; font-size: 1.1em;">${escapeHtml(info.title)}</div>
+                                <div style="color: #666; font-size: 0.9em; margin-top: 4px;">
+                                    ${escapeHtml(info.author)} • ${isbn}${publisher}ID: ${bookId}
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-delete" onclick="deleteBook('${bookId}', '${escapeHtml(info.title)}')">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            document.getElementById('booksList').innerHTML = html;
+            renderPagination(totalPages);
+        }
+
+        // Render pagination controls
+        function renderPagination(totalPages) {
+            if (totalPages <= 1) {
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            
+            // Previous button
+            html += `
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                    ← Previous
+                </button>
+            `;
+
+            // Page numbers
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+            
+            if (endPage - startPage < maxPagesToShow - 1) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+
+            if (startPage > 1) {
+                html += `<button onclick="changePage(1)">1</button>`;
+                if (startPage > 2) {
+                    html += `<span style="padding: 0 10px; color: #999;">...</span>`;
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <button onclick="changePage(${i})" ${i === currentPage ? 'class="active"' : ''}>
+                        ${i}
+                    </button>
+                `;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += `<span style="padding: 0 10px; color: #999;">...</span>`;
+                }
+                html += `<button onclick="changePage(${totalPages})">${totalPages}</button>`;
+            }
+
+            // Next button
+            html += `
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                    Next →
+                </button>
+            `;
+
+            // Info
+            const startIdx = (currentPage - 1) * booksPerPage + 1;
+            const endIdx = Math.min(currentPage * booksPerPage, filteredBooks.length);
+            html += `
+                <div class="pagination-info">
+                    Showing ${startIdx}-${endIdx} of ${filteredBooks.length} books
+                </div>
+            `;
+
+            document.getElementById('pagination').innerHTML = html;
+        }
+
+        // Change page
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderBooks();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Set view mode
+        function setViewMode(mode) {
+            viewMode = mode;
+            document.getElementById('gridViewBtn').classList.toggle('active', mode === 'grid');
+            document.getElementById('listViewBtn').classList.toggle('active', mode === 'list');
+            renderBooks();
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Search input handler
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            filterBooks(e.target.value);
+        });
 
         // Delete book
         async function deleteBook(bookId, title) {

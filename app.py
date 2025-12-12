@@ -17,6 +17,12 @@ app = FastAPI(title="Book Cover OCR Service", version="1.0.0")
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Mount covers directory for serving cover images
+from pathlib import Path as PathLib
+covers_path = PathLib("covers")
+if covers_path.exists():
+    app.mount("/covers", StaticFiles(directory="covers"), name="covers")
+
 meta = json.load(open("meta.json"))
 
 
