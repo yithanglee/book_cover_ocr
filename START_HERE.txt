@@ -1,0 +1,89 @@
+================================================================================
+                    BOOK COVER OCR - START HERE
+================================================================================
+
+YOU'RE GETTING ERRORS BECAUSE: You need to add book cover images first!
+
+================================================================================
+                        QUICK FIX (2 MINUTES)
+================================================================================
+
+Run these commands on your GMKtec M3:
+
+    cd /data/bookcv
+    source venv/bin/activate
+    python3 create_demo_data.py
+    uvicorn app:app --host 0.0.0.0 --port 8001
+
+Then open your cloudflare tunnel URL in a browser!
+
+================================================================================
+                        WHAT THIS DOES
+================================================================================
+
+1. Creates 3 demo book covers (for testing)
+2. Generates embeddings from them
+3. Starts the service on port 8001
+4. You can now test the web interface!
+
+================================================================================
+                        AFTER TESTING
+================================================================================
+
+To add your real books:
+
+1. Place book cover images in covers/ directory
+2. Edit meta.json with your book info
+3. Run: python3 generate_embeddings.py
+4. Restart service
+
+See FIRST_TIME_SETUP.md for detailed instructions.
+
+================================================================================
+                        PORT CONFIGURATION
+================================================================================
+
+You have cloudflared on port 8000, so:
+- Service runs on port 8001
+- Access locally: http://localhost:8001
+- Access via cloudflare: your cloudflare tunnel URL
+
+If you want to use port 8000:
+- Stop cloudflared first
+- Then run: uvicorn app:app --host 0.0.0.0 --port 8000
+
+================================================================================
+                        HELPFUL COMMANDS
+================================================================================
+
+Verify setup:
+    python3 verify_setup.py
+
+Create demo data:
+    python3 create_demo_data.py
+
+Generate embeddings from your books:
+    python3 generate_embeddings.py
+
+Start service:
+    uvicorn app:app --host 0.0.0.0 --port 8001
+
+Test service:
+    curl http://localhost:8001/health
+
+================================================================================
+                        DOCUMENTATION FILES
+================================================================================
+
+FIRST_TIME_SETUP.md     - Read this FIRST (your current situation)
+SETUP_INSTRUCTIONS.md   - Adding your own books
+QUICK_START.md          - Quick usage guide
+README.md               - Full documentation
+IMAGE_FEEDING_OPTIONS.md - How to feed images
+
+================================================================================
+
+NEXT STEP: Run the commands above to create demo data and start testing!
+
+================================================================================
+
