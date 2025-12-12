@@ -204,7 +204,7 @@ def create_processing_pipeline(img: np.ndarray, quality_info: Dict = None) -> Li
         quality_info: Quality assessment results
     
     Returns:
-        List of dicts with step name and base64 encoded image
+        List of dicts with step name and base64 encoded image (JSON-serializable)
     """
     steps = []
     
@@ -213,7 +213,7 @@ def create_processing_pipeline(img: np.ndarray, quality_info: Dict = None) -> Li
     steps.append({
         'name': '1. Original Image',
         'description': 'Uploaded book cover image',
-        'image': base64.b64encode(buffer).decode('utf-8')
+        'image': str(base64.b64encode(buffer).decode('utf-8'))
     })
     
     # Step 2: Quality indicators
@@ -223,7 +223,7 @@ def create_processing_pipeline(img: np.ndarray, quality_info: Dict = None) -> Li
         steps.append({
             'name': '2. Quality Assessment',
             'description': 'Checking resolution, brightness, and sharpness',
-            'image': base64.b64encode(buffer).decode('utf-8')
+            'image': str(base64.b64encode(buffer).decode('utf-8'))
         })
     
     # Step 3: Resize visualization
@@ -232,7 +232,7 @@ def create_processing_pipeline(img: np.ndarray, quality_info: Dict = None) -> Li
     steps.append({
         'name': '3. Resize Operation',
         'description': 'Image resized to 224x224 for model input',
-        'image': base64.b64encode(buffer).decode('utf-8')
+        'image': str(base64.b64encode(buffer).decode('utf-8'))
     })
     
     # Step 4: Feature extraction
@@ -241,7 +241,7 @@ def create_processing_pipeline(img: np.ndarray, quality_info: Dict = None) -> Li
     steps.append({
         'name': '4. Feature Detection',
         'description': 'Key visual features detected in the image',
-        'image': base64.b64encode(buffer).decode('utf-8')
+        'image': str(base64.b64encode(buffer).decode('utf-8'))
     })
     
     # Step 5: CLIP patches
@@ -250,7 +250,7 @@ def create_processing_pipeline(img: np.ndarray, quality_info: Dict = None) -> Li
     steps.append({
         'name': '5. CLIP Patch Processing',
         'description': 'Image divided into patches for CLIP model',
-        'image': base64.b64encode(buffer).decode('utf-8')
+        'image': str(base64.b64encode(buffer).decode('utf-8'))
     })
     
     return steps
@@ -264,28 +264,28 @@ def get_quality_metrics(img: np.ndarray) -> Dict:
         img: Input image
     
     Returns:
-        Dict with quality metrics
+        Dict with quality metrics (JSON-serializable)
     """
     h, w = img.shape[:2]
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
     # Brightness
-    brightness = np.mean(gray)
+    brightness = float(np.mean(gray))
     
     # Sharpness (Laplacian variance)
-    sharpness = cv2.Laplacian(gray, cv2.CV_64F).var()
+    sharpness = float(cv2.Laplacian(gray, cv2.CV_64F).var())
     
-    # Determine if acceptable
-    acceptable = (
+    # Determine if acceptable (convert to native Python bool)
+    acceptable = bool(
         h >= 100 and w >= 100 and
         brightness >= 20 and
         sharpness >= 50
     )
     
     return {
-        'resolution': (w, h),
-        'brightness': float(brightness),
-        'sharpness': float(sharpness),
+        'resolution': [int(w), int(h)],  # Use list instead of tuple for JSON
+        'brightness': brightness,
+        'sharpness': sharpness,
         'acceptable': acceptable
     }
 
