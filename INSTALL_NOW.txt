@@ -1,0 +1,101 @@
+===============================================================================
+  BOOK COVER OCR v2.0 - INSTALLATION INSTRUCTIONS
+===============================================================================
+
+YOUR PYTHON VERSION: Python 3.12
+ISSUE: Old package versions don't support Python 3.12
+
+===============================================================================
+  SOLUTION: Run ONE of these commands
+===============================================================================
+
+OPTION 1: Automated Install (RECOMMENDED)
+------------------------------------------
+cd /home/ubuntu/Development/book_cover_ocr
+chmod +x install_py312.sh
+./install_py312.sh
+
+
+OPTION 2: Manual Install
+-------------------------
+cd /home/ubuntu/Development/book_cover_ocr
+
+# Upgrade pip first
+python3 -m pip install --upgrade pip setuptools wheel
+
+# Install numpy first (binary wheel)
+pip install numpy==1.26.4
+
+# Install PyTorch
+pip install torch==2.2.1 torchvision==0.17.1 --index-url https://download.pytorch.org/whl/cpu
+
+# Install everything else
+pip install -r requirements_py312.txt
+
+
+OPTION 3: Use Older Python (if available)
+------------------------------------------
+# Check if you have Python 3.11 or 3.10
+python3.11 --version
+
+# If yes, create venv with it
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+
+===============================================================================
+  WHAT'S DIFFERENT FOR PYTHON 3.12?
+===============================================================================
+
+Package versions updated to support Python 3.12:
+- numpy: 1.24.3 → 1.26.4
+- torch: 2.1.2 → 2.2.1
+- transformers: 4.36.2 → 4.38.2
+- And a few others...
+
+All functionality remains the same!
+
+
+===============================================================================
+  AFTER INSTALLATION
+===============================================================================
+
+1. Test the installation:
+   python3 test_v2.py
+
+2. Migrate your data (if upgrading from v1):
+   python3 migrate_to_v2.py
+
+3. Start the service:
+   uvicorn app:app --host 0.0.0.0 --port 8000
+
+4. Open in browser:
+   http://localhost:8000
+
+
+===============================================================================
+  ESTIMATED TIME
+===============================================================================
+
+- Download dependencies: 5-10 minutes
+- Installation: 1-2 minutes
+- Total: ~10 minutes
+
+
+===============================================================================
+  NEED HELP?
+===============================================================================
+
+Read: PYTHON_312_FIX.md (detailed troubleshooting)
+Or:   UPGRADE_TO_V2.md (complete guide)
+
+
+===============================================================================
+  QUICK START (Copy & Paste This)
+===============================================================================
+
+cd /home/ubuntu/Development/book_cover_ocr && chmod +x install_py312.sh && ./install_py312.sh
+
+===============================================================================
+
