@@ -1,0 +1,17 @@
+{
+  "B001": {
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "image": "covers/B001.jpg"
+  },
+  "B002": {
+    "title": "Introduction to Algorithms",
+    "author": "Thomas Cormen",
+    "image": "covers/B002.jpg"
+  },
+  "B003": {
+    "title": "Mere Christianity",
+    "author": "C. S. Lewis",
+    "image": "covers/B003.jpg"
+  }
+}
