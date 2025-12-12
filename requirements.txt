@@ -8,3 +8,16 @@ faiss-cpu==1.7.4
 requests==2.31.0
 watchdog==3.0.0
 
+# Priority 1: Better Model (CLIP)
+torch==2.1.2
+torchvision==0.16.2
+transformers==4.36.2
+Pillow==10.2.0
+
+# Priority 3: Database and Caching
+aiosqlite==0.19.0
+cachetools==5.3.2
+
+# Utilities
+tqdm==4.66.1
+
